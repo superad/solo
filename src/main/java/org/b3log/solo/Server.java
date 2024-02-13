@@ -380,9 +380,9 @@ public final class Server extends BaseServer {
             eventManager.registerListener(pluginRefresher);
             eventManager.registerListener(new ViewLoadEventHandler());
             final B3ArticleSender articleSender = beanManager.getReference(B3ArticleSender.class);
-            eventManager.registerListener(articleSender);
+//            eventManager.registerListener(articleSender);
             final B3ArticleUpdater articleUpdater = beanManager.getReference(B3ArticleUpdater.class);
-            eventManager.registerListener(articleUpdater);
+//            eventManager.registerListener(articleUpdater);
         } catch (final Exception e) {
             LOGGER.log(Level.ERROR, "Register event handlers failed", e);
 

@@ -2,7 +2,7 @@ FROM maven:3.8.4-openjdk-11 as MVN_BUILD
 
 WORKDIR /opt/solo/
 ADD . /tmp
-RUN cd /tmp && mvn package -DskipTests -Pci -q && mv target/solo/* /opt/solo/ \
+RUN cd /tmp && mvn package -DskipTests -Pdev  && mv target/solo/* /opt/solo/ \
 && cp -f /tmp/src/main/resources/docker/* /opt/solo/
 
 FROM openjdk:18-alpine
@@ -10,7 +10,8 @@ LABEL maintainer="Liang Ding<845765@qq.com>"
 
 WORKDIR /opt/solo/
 COPY --from=MVN_BUILD /opt/solo/ /opt/solo/
-RUN apk add --no-cache ca-certificates tzdata
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories  \
+    && apk add --no-cache ca-certificates tzdata
 
 ENV TZ=Asia/Shanghai
 ARG git_commit=0
