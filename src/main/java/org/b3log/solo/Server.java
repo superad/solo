@@ -180,31 +180,34 @@ public final class Server extends BaseServer {
             System.exit(-1);
         }
 
-        String serverScheme = commandLine.getOptionValue("server_scheme");
+        //服务器资源
+        String serverScheme = getEnvValue(commandLine,"server_scheme");
         if (null != serverScheme) {
             Latkes.setLatkeProperty("serverScheme", serverScheme);
         }
-        String serverHost = commandLine.getOptionValue("server_host");
+        String serverHost = getEnvValue(commandLine,"server_host");
         if (null != serverHost) {
             Latkes.setLatkeProperty("serverHost", serverHost);
         }
-        String serverPort = commandLine.getOptionValue("server_port");
+        String serverPort = getEnvValue(commandLine,"server_port");
         if (null != serverPort) {
             Latkes.setLatkeProperty("serverPort", serverPort);
         }
-        String staticServerScheme = commandLine.getOptionValue("static_server_scheme");
+
+        //静态资源
+        String staticServerScheme = getEnvValue(commandLine,"static_server_scheme");
         if (null != staticServerScheme) {
             Latkes.setLatkeProperty("staticServerScheme", staticServerScheme);
         }
-        String staticServerHost = commandLine.getOptionValue("static_server_host");
+        String staticServerHost = getEnvValue(commandLine,"static_server_host");
         if (null != staticServerHost) {
             Latkes.setLatkeProperty("staticServerHost", staticServerHost);
         }
-        String staticServerPort = commandLine.getOptionValue("static_server_port");
+        String staticServerPort = getEnvValue(commandLine,"static_server_port");
         if (null != staticServerPort) {
             Latkes.setLatkeProperty("staticServerPort", staticServerPort);
         }
-        String staticPath = commandLine.getOptionValue("static_path");
+        String staticPath = getEnvValue(commandLine,"static_path");
         if (null != staticPath) {
             if (StringUtils.equals(staticServerHost, "cdn.jsdelivr.net")) {
                 // 如果使用了 jsDelivr，则需要加上版本号避免 CDN 缓存问题 https://github.com/88250/solo/issues/83
@@ -232,7 +235,6 @@ public final class Server extends BaseServer {
 
         if (Latkes.isDocker()) {
             // Docker 环境需要填充默认值
-
             final String jdbcMinConns = System.getenv("JDBC_MIN_CONNS");
             if (StringUtils.isBlank(jdbcMinConns)) {
                 Latkes.setLocalProperty("jdbc.minConnCnt", "5");
@@ -323,13 +325,23 @@ public final class Server extends BaseServer {
         final String unixDomainSocketPath = commandLine.getOptionValue("unix_domain_socket_path");
         if (StringUtils.isNotBlank(unixDomainSocketPath)) {
             server.start(unixDomainSocketPath);
+            LOGGER.info("Solo listen at :"+unixDomainSocketPath);
         } else {
             String portArg = commandLine.getOptionValue("listen_port");
             if (!Strings.isNumeric(portArg)) {
                 portArg = "8080";
             }
+            LOGGER.info("Solo listen at :"+portArg);
             server.start(Integer.parseInt(portArg));
         }
+    }
+
+    private static String getEnvValue(CommandLine commandLine, String key) {
+        String value = commandLine.getOptionValue(key);
+        if(value==null){
+             return System.getenv(key);
+        }
+        return value;
     }
 
     /**
@@ -468,13 +480,15 @@ public final class Server extends BaseServer {
                 get().head().uri("/rss.xml").handler(feedProcessor::blogArticlesRSS);
 
         final IndexProcessor indexProcessor = beanManager.getReference(IndexProcessor.class);
+        final HealthProcessor healthProcessor = beanManager.getReference(HealthProcessor.class);
         final Dispatcher.RouterGroup indexGroup = Dispatcher.group();
         indexGroup.middlewares(staticMidware::handle);
         indexGroup.router().get(new String[]{"", "/", "/index.html"}, indexProcessor::showIndex);
         indexGroup.get("/favicon.ico", indexProcessor::showFavicon).
                 get("/start", indexProcessor::showStart).
                 get("/logout", indexProcessor::logout).
-                get("/kill-browser", indexProcessor::showKillBrowser);
+                get("/kill-browser", indexProcessor::showKillBrowser).
+                get("/health",healthProcessor::health);
 
         final OAuthProcessor oAuthProcessor = beanManager.getReference(OAuthProcessor.class);
         final Dispatcher.RouterGroup oauthGroup = Dispatcher.group();
