@@ -39,6 +39,7 @@ import org.b3log.solo.event.B3ArticleUpdater;
 import org.b3log.solo.event.PluginRefresher;
 import org.b3log.solo.processor.*;
 import org.b3log.solo.processor.console.*;
+import org.b3log.solo.processor.tools.ToolsProcessor;
 import org.b3log.solo.repository.OptionRepository;
 import org.b3log.solo.service.*;
 import org.b3log.solo.util.Markdowns;
@@ -489,6 +490,12 @@ public final class Server extends BaseServer {
                 get("/logout", indexProcessor::logout).
                 get("/kill-browser", indexProcessor::showKillBrowser).
                 get("/health",healthProcessor::health);
+
+        final ToolsProcessor toolsProcessor = beanManager.getReference(ToolsProcessor.class);
+        final Dispatcher.RouterGroup toolsGroup = Dispatcher.group();
+        toolsGroup.get("/json-format",toolsProcessor::jsonFormat);
+
+
 
         final OAuthProcessor oAuthProcessor = beanManager.getReference(OAuthProcessor.class);
         final Dispatcher.RouterGroup oauthGroup = Dispatcher.group();

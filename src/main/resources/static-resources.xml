@@ -98,4 +98,9 @@
     <include path="/plugins/**/*.mtn"/>
     <include path="/plugins/**/*.ogg"/>
 
+    <include path="/tools/**/*.html"/>
+    <include path="/tools/**/*.js"/>
+    <include path="/tools/**/*.css"/>
+    <include path="/tools/**/*.png"/>
+
 </static-files>
